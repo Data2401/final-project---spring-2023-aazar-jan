@@ -107,13 +107,11 @@ df <- df[!duplicated(df$title),]
 paste("Number of rows:",nrow(df))
 ```
 
-There were also more than 200 duplicate videos wh
-
 Let's now convert the column "pubishedAt" column into a data-time format yyyy-mm-dd and create another column for year to do aggregate analysis.
 
 ```{r}
 df <- df %>% mutate(publishedAt = as.POSIXct(publishedAt, format = "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")) %>% mutate(publishedAt = format(publishedAt, format = "%Y-%m-%d"),)
-
+df$year <- format(as.Date(df$publishedAt), format="%Y")
 ```
 
 
@@ -141,7 +139,6 @@ grid.table(least_five)
 ## Average Views over time   
 
 ```{r}
-df$year <- format(as.Date(df$publishedAt), format="%Y")
 ggplot(df, aes(x=year,y=viewCount)) + geom_bar(stat='summary',fun="mean",fill='skyblue')
 ```
 
@@ -200,11 +197,17 @@ Lets find out how the engagement metrics are related to each other. What is is t
 ```{r}
 ggplot(df, aes(x = df$likeCount/df$viewCount)) + geom_density(fill="orange") + labs(x= "Like to View ratio") +geom_vline(xintercept = 0.025,size=1,color="blue")
 ```
-
+ 
+For every 2.5 poeple who like the video, there are 100 people who watch the video. 
+  
 ```{r}
 ggplot(df, aes(x = df$commentCount/df$likeCount)) + geom_density(fill="brown") + geom_vline(xintercept = 0.033,size=1,color=
 'green') + labs(x= "Comment to Like ratio")
 ```
+
+
+For every 3.3 people who comment on this video, 100 people like the video.
+
 
 ## Have these ratios changed over time?
 
@@ -220,7 +223,7 @@ ggplot(df, aes(y=year, x=df$likeCount/df$viewCount)) + geom_bar(stat='summary',f
 
 On way to assess the success of a video is by user engagement turnover. In English, how higher were the above metrics. Now let's out the five best videos in terms of view to like ratio.
 
-```{r fig.width=10}
+```{r fig.width=12}
 grid.table(df %>% mutate(ratio=likeCount/viewCount) %>%  slice_max(ratio, n=5)  %>% select(title,publishedAt,viewCount,likeCount,ratio) %>% arrange(desc(ratio)))
 ```
 
