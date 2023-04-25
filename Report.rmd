@@ -227,6 +227,7 @@ ggplot(df, aes(x = df$commentCount/df$likeCount)) + geom_density(fill="brown") +
 
 
 For every 3.3 people who comment on this video, 100 people like the video.
+
 ---
 
 
