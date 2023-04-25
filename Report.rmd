@@ -2,15 +2,18 @@
 title: "Mr Beast !!!"
 author: "Aazar Jan"
 date: "2023-04-16"
-output: html_document
+output: slidy_presentation
 ---
+
+# Importing Libraries
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning = FALSE)
 ```
 
 
-```{r echo=FALSE}
+
+```{r}
 library(dplyr)
 library(ggplot2)
 library(zoo)
@@ -26,11 +29,14 @@ library("gridExtra")
 raw_df = read.csv('MrBeastYoutube.csv')
 ```
 
-![](https://ichef.bbci.co.uk/news/976/cpsprodpb/16621/production/_122718619_maxresdefault1.jpg.webp)
-
-
 
 # Analysing Mr Beast's Youtube Channel
+
+![](https://ichef.bbci.co.uk/news/976/cpsprodpb/16621/production/_122718619_maxresdefault1.jpg.webp)
+
+**I will give a free iPhone to anyone who doesn't sleep till the end of this presentation!**
+
+---
 
 In this project, I will analyse the famous YouTube channel "Mr Beast". I have extracted this data from Google using the YouTube API. 
 
@@ -50,8 +56,9 @@ The data set contains 7 features:
  
  7. duration: Duration of video in seconds.
  
- 
-**Pre-processing:**
+---
+
+# Pre-processing:
  
  
 + Remove duplicates and ensure appropriate data types.
@@ -73,8 +80,10 @@ The data set contains 7 features:
  + Having access to more user features like viewer to subscriber ratio, subscriber gain for every video, and average watch duration.
  
 
+---
 
 ```{r}
+# removing title column from the dataframe
 df <- raw_df[,-3] 
 head(df)
 ```
@@ -83,10 +92,15 @@ head(df)
 summary(df)
 ```
 
+
 ```{r}
 paste("Number of rows:",nrow(df))
 ```
-+ Lets see if there are any duplicates in the data set, because I used two different endpoint functions: one for normal videos and one for playlist videos. 
+---
+
+# Finding duplicates
+
+Lets see if there are any duplicates in the data set, because I used two different endpoint functions: one for normal videos and one for playlist videos. 
 
 
 ```{r}
@@ -107,6 +121,9 @@ df <- df[!duplicated(df$title),]
 paste("Number of rows:",nrow(df))
 ```
 
+
+---
+
 Let's now convert the column "pubishedAt" column into a data-time format yyyy-mm-dd and create another column for year to do aggregate analysis.
 
 ```{r}
@@ -115,56 +132,55 @@ df$year <- format(as.Date(df$publishedAt), format="%Y")
 ```
 
 
-
 ```{r}
 head(df)
 ```
+---
 
-
-
-## Top Five watched videos
+# Top Five watched videos
 
 ```{r fig.width=10}
 top_five = df %>% slice_max(viewCount,n=5) %>% select(title,viewCount,publishedAt)
 grid.table(top_five)
 ```
 
-## Least Five watched videos 
+
+
+# Least Five watched videos 
 ```{r fig.width=10}
 least_five = df %>% slice_min(viewCount,n=5) %>% select(title,viewCount,publishedAt)
 grid.table(least_five)
 ```
 
 
-## Average Views over time   
+# Average Views over time   
 
 ```{r}
 ggplot(df, aes(x=year,y=viewCount)) + geom_bar(stat='summary',fun="mean",fill='skyblue')
 ```
 
-## Average Like Count over time
+# Average Like Count over time
 
 ```{r}
 df$year <- format(as.Date(df$publishedAt), format="%Y")
 ggplot(df, aes(x=year,y=likeCount)) + geom_bar(stat='summary',fun="mean",fill='lightgreen')
 ```
 
-## Videos by Year
+# Videos by Year
 
 ```{r}
 ggplot(df) + geom_histogram(aes(x=year),stat="count",fill="maroon") + labs(x="Year", y = "Number of Videos")
 ```
 
-## Videos by Month
+# Videos by Month
 
 ```{r}
 ggplot(df, aes(x=format(as.Date(df$publishedAt), format="%m"))) + geom_bar(stat='count',fill="purple") + labs(x="Month", y = "Number of Videos")
 ```
 
+# Is Mr Beast making longer videos now than before? Lets find out...
 
-## Is Mr Beast making longer videos now than before? Lets find out...
-
-lets first convert duration into minutes because seconds don't make sense.
+First,lets convert duration into minutes because seconds don't make sense.
 
 ```{r}
 df <- df %>% mutate(dur_in_min=round(duration/60,2))
@@ -184,7 +200,7 @@ ggplot(df %>% filter(dur_in_min<60),aes(y=year,x=dur_in_min)) + geom_boxplot(fil
 
 Well, the general trend is that videos have gotten longer over time. 
 
-## Does duration affect like count?
+# Does duration affect like count?
 
 ```{r fig.height=10}
 ggplot(df %>% filter(dur_in_min<=60 & likeCount <= 10000000), aes(x = dur_in_min, y = likeCount)) + geom_point() + geom_smooth() + facet_wrap(vars(year))
@@ -192,14 +208,18 @@ ggplot(df %>% filter(dur_in_min<=60 & likeCount <= 10000000), aes(x = dur_in_min
 
 <img src= "https://media4.giphy.com/media/3o6Zt5k4mdzEvDqH4s/giphy.gif?cid=6c09b9529900af9ce772cd01ebf79d0668f34e31eb5b24fe&rid=giphy.gif&ct=g" width="400" height="400">
 
-Lets find out how the engagement metrics are related to each other. What is is the distribution of view-like, view-comment and like-comment ratios.
+---
 
+**Lets find out how the engagement metrics are related to each other. What is is the distribution of view-like, view-comment and like-comment ratios.**
+
+## Like to View Ratio
 ```{r}
 ggplot(df, aes(x = df$likeCount/df$viewCount)) + geom_density(fill="orange") + labs(x= "Like to View ratio") +geom_vline(xintercept = 0.025,size=1,color="blue")
 ```
  
-For every 2.5 poeple who like the video, there are 100 people who watch the video. 
-  
+For every 2.5 people who like the video, there are 100 people who watch the video. 
+
+## Comment to Like Ratio
 ```{r}
 ggplot(df, aes(x = df$commentCount/df$likeCount)) + geom_density(fill="brown") + geom_vline(xintercept = 0.033,size=1,color=
 'green') + labs(x= "Comment to Like ratio")
@@ -207,9 +227,10 @@ ggplot(df, aes(x = df$commentCount/df$likeCount)) + geom_density(fill="brown") +
 
 
 For every 3.3 people who comment on this video, 100 people like the video.
+---
 
 
-## Have these ratios changed over time?
+# Have these ratios changed over time?
 
 ```{r}
 ggplot(df, aes(y=year, x=df$commentCount/df$likeCount)) + geom_bar(stat='summary',fun="mean",fill="black") + labs(x="like to comment ratio") + theme_bw()
@@ -219,15 +240,16 @@ ggplot(df, aes(y=year, x=df$commentCount/df$likeCount)) + geom_bar(stat='summary
 ggplot(df, aes(y=year, x=df$likeCount/df$viewCount)) + geom_bar(stat='summary',fun="mean",fill="pink") + labs(x="like to comment ratio") + theme_dark()
 ```
 
-
+---
 
 On way to assess the success of a video is by user engagement turnover. In English, how higher were the above metrics. Now let's out the five best videos in terms of view to like ratio.
 
 ```{r fig.width=12}
 grid.table(df %>% mutate(ratio=likeCount/viewCount) %>%  slice_max(ratio, n=5)  %>% select(title,publishedAt,viewCount,likeCount,ratio) %>% arrange(desc(ratio)))
 ```
+---
 
-+ creating moving average for view count and like count. 
+#Moving Averages 
 
 ```{r}
 df <- df %>% arrange(as.Date(publishedAt)) %>%  mutate(view_ma_5 = rollapply(viewCount, width = 5, FUN = mean, fill = NA, align = "right"))
@@ -235,14 +257,14 @@ df <- df %>% arrange(as.Date(publishedAt)) %>%  mutate(like_ma_5 = rollapply(lik
 ```
 
 
-## View Count with Moving Average
+## View Count Moving avearge
 
 ```{r, fig.width=20}
 ggplot(df, aes(x=as.Date(publishedAt))) + geom_line(aes(y=viewCount,group=1)) + geom_line(aes(y=view_ma_5,group=1),color="red",size=2) + scale_x_date(breaks = seq(as.Date("2012-02-20"), as.Date("2023-04-01"), by = "1 year"), 
 date_labels = "%b %y") + labs(x="publish Date")
 ```
 
-# Like Count with moving average
+## Like Count Moving average
 
 
 ```{r, fig.width=20}
@@ -253,9 +275,16 @@ date_labels = "%b %y") + labs(x="publish Date")
 
 
 
+# Titles and Descriptions
+
+Lets know analyze what kind of vocabulary does Mr Beast use in his title and video descriptions?
+Are they catchy?
+Do they follow a certain pattern?
+
 
 
 ```{r}
+# Cleaning the title column, converting it into corpus and making a frequency table
 titles = df$title
 docs <- Corpus(VectorSource(titles))
 docs <- docs %>%
@@ -279,9 +308,11 @@ wordcloud(words = title_df$word, freq = title_df$freq, min.freq = 1,max.words=20
 title("Title Words", line = -1, outer = TRUE)
 ```
 
+Words like "challenge","Last","Free","Random","Wins" do attract people. 
 
 
 ```{r}
+# Cleaning the title column, converting it into corpus and making a frequency table
 descriptions = raw_df$description
 descriptions = gsub("http[[:alnum:][:punct:]]*", "", descriptions)
 descriptions = gsub('[^[:alnum:] ]','',descriptions)
@@ -305,4 +336,5 @@ wordcloud(words = descriptions_df$word, freq = descriptions_df$freq, min.freq = 
 title("Description Words", line = -1, outer = TRUE)
 ```
 
+Ya'all know the answer to this :p
 
